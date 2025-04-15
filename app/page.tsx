@@ -10,7 +10,7 @@ export default function LandingPage() {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
             <Droplet className="h-6 w-6 text-blue-600" />
-            <span className="text-lg font-semibold">Cloud Blood Bank</span>
+            <span className="text-lg font-semibold">Seva Blood Bank</span>
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <Link href="#features" className="text-sm font-medium text-gray-600 hover:text-blue-600 transition-colors">

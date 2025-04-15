@@ -1,9 +1,7 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
-import { Search, MapPin, Droplet, Clock, Hospital } from "lucide-react"
+import { Search, MapPin, Phone, Hospital } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -27,6 +25,13 @@ export function BloodSearchForm() {
   const [searchResults, setSearchResults] = useState<BloodResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [searchPerformed, setSearchPerformed] = useState(false)
+
+  const [bloodType, setBloodType] = useState("")
+  const [pinCode, setPinCode] = useState("")
+  const [radius, setRadius] = useState("10")
+  const [component, setComponent] = useState("")
+  const [facility, setFacility] = useState("")
+  const [minUnits, setMinUnits] = useState("1")
 
   const mockResults: BloodResult[] = [
     {
@@ -53,8 +58,8 @@ export function BloodSearchForm() {
       id: "3",
       hospital: "Community Blood Bank",
       distance: "5.7 km",
-      bloodType: "O+",
-      units: 20,
+      bloodType: "A+",
+      units: 4,
       lastUpdated: "30 minutes ago",
       address: "789 Donation Drive, Eastside",
       contact: "+1 (555) 456-7890",
@@ -65,12 +70,16 @@ export function BloodSearchForm() {
     e.preventDefault()
     setIsLoading(true)
 
-    // Simulate API call
     setTimeout(() => {
-      setSearchResults(mockResults)
+      const filtered = mockResults.filter(
+        (result) =>
+          result.bloodType.toLowerCase() === bloodType.toLowerCase() &&
+          result.units >= parseInt(minUnits)
+      )
+      setSearchResults(filtered)
       setIsLoading(false)
       setSearchPerformed(true)
-    }, 1500)
+    }, 1000)
   }
 
   return (
@@ -79,33 +88,32 @@ export function BloodSearchForm() {
         <CardTitle className="text-2xl">Blood Availability Search</CardTitle>
         <CardDescription>Find blood units available at hospitals and blood banks near you</CardDescription>
       </CardHeader>
+
       <CardContent>
         <Tabs defaultValue="search" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="search">Quick Search</TabsTrigger>
             <TabsTrigger value="advanced">Advanced Options</TabsTrigger>
           </TabsList>
+
+          {/* Quick Search */}
           <TabsContent value="search">
             <form onSubmit={handleSearch} className="space-y-4 pt-4">
               <div className="grid gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="bloodType">Blood Type (Required)</Label>
-                  <Select required>
+                  <Select onValueChange={setBloodType} required>
                     <SelectTrigger id="bloodType">
                       <SelectValue placeholder="Select blood type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="a-pos">A+</SelectItem>
-                      <SelectItem value="a-neg">A-</SelectItem>
-                      <SelectItem value="b-pos">B+</SelectItem>
-                      <SelectItem value="b-neg">B-</SelectItem>
-                      <SelectItem value="ab-pos">AB+</SelectItem>
-                      <SelectItem value="ab-neg">AB-</SelectItem>
-                      <SelectItem value="o-pos">O+</SelectItem>
-                      <SelectItem value="o-neg">O-</SelectItem>
+                      {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((type) => (
+                        <SelectItem key={type} value={type}>{type}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="pincode">PIN Code (Required)</Label>
                   <div className="relative">
@@ -116,33 +124,24 @@ export function BloodSearchForm() {
                       className="pl-10"
                       required
                       pattern="[0-9]{5,6}"
+                      onChange={(e) => setPinCode(e.target.value)}
                     />
                   </div>
                 </div>
+
                 <div className="grid gap-2">
                   <Label>Search Radius</Label>
-                  <RadioGroup defaultValue="10" className="flex">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="5" id="r1" />
-                      <Label htmlFor="r1" className="font-normal">
-                        5 km
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="10" id="r2" />
-                      <Label htmlFor="r2" className="font-normal">
-                        10 km
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="25" id="r3" />
-                      <Label htmlFor="r3" className="font-normal">
-                        25 km
-                      </Label>
-                    </div>
+                  <RadioGroup defaultValue="10" className="flex" onValueChange={setRadius}>
+                    {["5", "10", "25"].map((r) => (
+                      <div key={r} className="flex items-center space-x-2">
+                        <RadioGroupItem value={r} id={`r${r}`} />
+                        <Label htmlFor={`r${r}`} className="font-normal">{r} km</Label>
+                      </div>
+                    ))}
                   </RadioGroup>
                 </div>
               </div>
+
               <Button type="submit" className="w-full bg-red-600 hover:bg-red-700" disabled={isLoading}>
                 {isLoading ? (
                   <div className="flex items-center gap-2">
@@ -158,43 +157,14 @@ export function BloodSearchForm() {
               </Button>
             </form>
           </TabsContent>
+
+          {/* Advanced Search */}
           <TabsContent value="advanced">
             <form onSubmit={handleSearch} className="space-y-4 pt-4">
               <div className="grid gap-4">
                 <div className="grid gap-2">
-                  <Label htmlFor="bloodType">Blood Type (Required)</Label>
-                  <Select required>
-                    <SelectTrigger id="bloodType">
-                      <SelectValue placeholder="Select blood type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="a-pos">A+</SelectItem>
-                      <SelectItem value="a-neg">A-</SelectItem>
-                      <SelectItem value="b-pos">B+</SelectItem>
-                      <SelectItem value="b-neg">B-</SelectItem>
-                      <SelectItem value="ab-pos">AB+</SelectItem>
-                      <SelectItem value="ab-neg">AB-</SelectItem>
-                      <SelectItem value="o-pos">O+</SelectItem>
-                      <SelectItem value="o-neg">O-</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="pincode">PIN Code (Required)</Label>
-                  <div className="relative">
-                    <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                    <Input
-                      id="pincode"
-                      placeholder="Enter your PIN code"
-                      className="pl-10"
-                      required
-                      pattern="[0-9]{5,6}"
-                    />
-                  </div>
-                </div>
-                <div className="grid gap-2">
                   <Label htmlFor="component">Blood Component</Label>
-                  <Select>
+                  <Select onValueChange={setComponent}>
                     <SelectTrigger id="component">
                       <SelectValue placeholder="Select component" />
                     </SelectTrigger>
@@ -207,9 +177,10 @@ export function BloodSearchForm() {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="grid gap-2">
                   <Label htmlFor="facility">Facility Type</Label>
-                  <Select>
+                  <Select onValueChange={setFacility}>
                     <SelectTrigger id="facility">
                       <SelectValue placeholder="All facilities" />
                     </SelectTrigger>
@@ -221,30 +192,20 @@ export function BloodSearchForm() {
                     </SelectContent>
                   </Select>
                 </div>
+
                 <div className="grid gap-2">
                   <Label>Minimum Units Required</Label>
-                  <RadioGroup defaultValue="1" className="flex">
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="1" id="u1" />
-                      <Label htmlFor="u1" className="font-normal">
-                        1+
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="3" id="u2" />
-                      <Label htmlFor="u2" className="font-normal">
-                        3+
-                      </Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="5" id="u3" />
-                      <Label htmlFor="u3" className="font-normal">
-                        5+
-                      </Label>
-                    </div>
+                  <RadioGroup defaultValue="1" className="flex" onValueChange={setMinUnits}>
+                    {["1", "3", "5"].map((u) => (
+                      <div key={u} className="flex items-center space-x-2">
+                        <RadioGroupItem value={u} id={`u${u}`} />
+                        <Label htmlFor={`u${u}`} className="font-normal">{u}+</Label>
+                      </div>
+                    ))}
                   </RadioGroup>
                 </div>
               </div>
+
               <Button type="submit" className="w-full bg-red-600 hover:bg-red-700" disabled={isLoading}>
                 {isLoading ? (
                   <div className="flex items-center gap-2">
@@ -262,52 +223,37 @@ export function BloodSearchForm() {
           </TabsContent>
         </Tabs>
       </CardContent>
+
       {searchPerformed && (
-        <CardFooter className="flex flex-col">
-          <div className="w-full border-t pt-4">
-            <h3 className="font-medium text-lg mb-3">Search Results</h3>
-            <div className="space-y-3">
+        <CardFooter className="flex flex-col items-start gap-4 mt-6">
+          {searchResults.length === 0 ? (
+            <p className="text-muted-foreground">No matching results found.</p>
+          ) : (
+            <div className="w-full space-y-4">
               {searchResults.map((result) => (
-                <div key={result.id} className="border rounded-lg p-4 hover:bg-slate-50 transition-colors">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h4 className="font-semibold text-lg">{result.hospital}</h4>
-                      <div className="flex items-center text-sm text-gray-500 mt-1">
-                        <MapPin className="h-3.5 w-3.5 mr-1" />
-                        <span>{result.distance} away</span>
-                      </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <div className="flex items-center">
-                        <Droplet className="h-4 w-4 text-red-600 mr-1" />
-                        <span className="font-bold">{result.bloodType}</span>
-                      </div>
-                      <span className="text-sm font-medium">{result.units} units</span>
-                    </div>
-                  </div>
-                  <div className="mt-3 text-sm text-gray-600">
-                    <p>{result.address}</p>
-                    <p className="font-medium">{result.contact}</p>
-                  </div>
-                  <div className="flex justify-between items-center mt-3 pt-2 border-t border-dashed">
-                    <div className="flex items-center text-xs text-gray-500">
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>Updated {result.lastUpdated}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
-                        <Hospital className="h-3.5 w-3.5 mr-1" />
-                        Details
-                      </Button>
-                      <Button size="sm" className="bg-red-600 hover:bg-red-700">
-                        Contact
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                <Card key={result.id} className="border border-red-200 bg-white shadow-md p-4">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Hospital className="h-5 w-5 text-red-500" />
+                      {result.hospital}
+                    </CardTitle>
+                    <CardDescription>{result.distance} away · {result.lastUpdated}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="text-sm space-y-1">
+                    <p><strong>Blood Type:</strong> {result.bloodType}</p>
+                    <p><strong>Units Available:</strong> {result.units}</p>
+                    <p><strong>Address:</strong> {result.address}</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="outline" className="flex gap-2 items-center">
+                      <Phone className="h-4 w-4" />
+                      {result.contact}
+                    </Button>
+                  </CardFooter>
+                </Card>
               ))}
             </div>
-          </div>
+          )}
         </CardFooter>
       )}
     </Card>
